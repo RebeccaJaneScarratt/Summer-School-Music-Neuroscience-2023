@@ -1,0 +1,92 @@
+document.body.style.backgroundColor = '#b9b8b8';
+  document.body.style.backgroundImage = "url('music.png')";
+  document.body.style.backgroundRepeat = "no-repeat";
+  document.body.style.backgroundSize = '300px';
+  document.body.style.fontSize = '22px';
+  
+    /* create a progress bar */
+    var jsPsych = initJsPsych({
+    show_progress_bar: true,
+    auto_update_progress_bar: false
+    });
+
+    /* initialize the timeline */
+    var timeline = [];
+    timeline.push({
+      type: jsPsychFullscreen,
+      fullscreen_mode: true
+    });
+
+    /* create welcome message and add to timeline */
+    timeline.push({
+      type: jsPsychHtmlButtonResponse,
+      stimulus: 'Welcome to the experiment.',
+      choices: ['Continue'],
+    });
+
+    /* define instructions trial text and button*/
+    var instructions = {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `
+        <p>In this experiment, you will be asked several questions.</p><p>
+        Please answer truthfully. </p>`,
+        choices: ['Continue'],
+      on_start: function() {
+        // set progress bar to 0 at the start of experiment
+        jsPsych.setProgressBar(0);
+      }
+    };
+    /* add to timeline */
+    timeline.push(instructions);
+    
+        /*gender- multiple choice*/
+    var gender = {
+      type: jsPsychSurveyMultiSelect,
+      questions: [
+        {prompt: 'What gender do you identify with?',
+          options: ['Female', 'Male', 'Non-binary', 'Other'],
+          name: 'music_selection',
+          required: true,
+          horizontal: true,
+          on_finish: function() {
+        // at the end of each trial, update the progress bar
+        // based on the current value and the proportion to update for each trial
+            var curr_progress_bar_value = jsPsych.getProgressBarCompleted();
+            jsPsych.setProgressBar(curr_progress_bar_value + (1/100));
+        },
+        },
+      ]
+    };
+    timeline.push(gender);
+    
+        /* country text input*/
+    var country = {
+      type: jsPsychSurveyText,
+      questions: [
+        {prompt: 'What is your country of residence?', 
+        required: true,
+        on_finish: function() {
+        // at the end of each trial, update the progress bar
+        // based on the current value and the proportion to update for each trial
+          var curr_progress_bar_value = jsPsych.getProgressBarCompleted();
+          jsPsych.setProgressBar(curr_progress_bar_value + (1/100));
+        },
+        },
+      ]
+    };
+    timeline.push(country);
+
+    // exit fullscreen mode
+    timeline.push({
+      type: jsPsychFullscreen,
+      fullscreen_mode: false
+    });
+
+    timeline.push({
+      type: jsPsychHtmlKeyboardResponse,  
+      stimulus: 'Thank you for your participation. You may now close the window.'
+    });
+
+
+    /* start the experiment */
+    jsPsych.run(timeline);

@@ -1,0 +1,120 @@
+document.body.style.backgroundColor = '#b9b8b8';
+  document.body.style.backgroundImage = "url('music.png')";
+  document.body.style.backgroundRepeat = "no-repeat";
+  document.body.style.backgroundSize = '300px';
+  document.body.style.fontSize = '22px';
+  
+    /* create a progress bar */
+    var jsPsych = initJsPsych({
+    show_progress_bar: true,
+    auto_update_progress_bar: false
+    });
+
+    /* initialize the timeline */
+    var timeline = [];
+    timeline.push({
+      type: jsPsychFullscreen,
+      fullscreen_mode: true
+    });
+
+    /* create wwelcome message and add to timeline */
+    timeline.push({
+      type: jsPsychHtmlButtonResponse,
+      stimulus: 'Welcome to the experiment.',
+      choices: ['Continue'],
+    });
+
+    /* preload stimuli. ATTENTION you still have to upload the files to cognition.run */
+    var preload = {
+      type: jsPsychPreload,
+      stimlus: [
+                "A Great Big World, Christina Aguilera - Say Something.wav",
+                "You Me At Six - No One Does It Better.wav"]
+    }
+    /* add to timeline */
+    timeline.push(preload);
+
+    /* define instructions trial */
+    var instructions = {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `
+        <p>In this experiment, you will hear 7 second exerpts of 
+        musical pieces.</p><p> After listening to the exerpt, you will 
+        be asked to rate your familiarity with the piece. 
+        </p><p> At the end, there will be some questions
+        about you and the music you usually listen to. </p>`,
+        choices: ['Continue'],
+      on_start: function() {
+        // set progress bar to 0 at the start of experiment
+        jsPsych.setProgressBar(0);
+      }
+    };
+    /* add to timeline */
+    timeline.push(instructions);
+
+    /* define trial stimuli array for timeline variables */
+    var test_stimuli = [
+    { stimulus: "A Great Big World, Christina Aguilera - Say Something.wav"},
+               { stimulus: "You Me At Six - No One Does It Better.wav"}
+    ];
+    
+    var trial_number = 4; /* make sure to change this numebr (4) depending on the number of trials you have */
+    
+    /* play audio and ask familiarity, play audio then rate on a slider*/
+    var test = {
+      type: jsPsychAudioSliderResponse,
+      prompt: '<p>How familiar are you with this musical piece?</p>',
+      stimulus: jsPsych.timelineVariable('stimulus'), /* this stimulus refers to the stimulus in test_stimuli */
+      labels: ['Very unfamiliar', 'Very familiar'],
+      require_movement: false, /* change to true if respondent needs to answer this question or can skip */
+      on_finish: function() {
+        // at the end of each trial, update the progress bar
+        // based on the current value and the proportion to update for each trial
+        var curr_progress_bar_value = jsPsych.getProgressBarCompleted();
+        jsPsych.setProgressBar(curr_progress_bar_value + (1/trial_number)); 
+      }
+    };
+
+    /* define the loop that will randomly send each stimulus to the 'test' trial */
+    var test_procedure = {
+      timeline: [test],
+      timeline_variables: test_stimuli,
+      randomize_order: true
+    };
+    /* add to timeline */
+    timeline.push(test_procedure);
+    
+        /*gender- multiple choice*/
+    var gender = {
+      type: jsPsychSurveyMultiSelect,
+      questions: [
+        {prompt: 'What gender do you identify with?',
+          options: ['Female', 'Male', 'Non-binary', 'Other'],
+          name: 'music_selection',
+          required: true,
+          horizontal: true,
+          on_finish: function() {
+        // at the end of each trial, update the progress bar
+        // based on the current value and the proportion to update for each trial
+            var curr_progress_bar_value = jsPsych.getProgressBarCompleted();
+            jsPsych.setProgressBar(curr_progress_bar_value + (1/100));
+        },
+        },
+      ]
+    };
+    timeline.push(gender);
+
+    // exit fullscreen mode
+    timeline.push({
+      type: jsPsychFullscreen,
+      fullscreen_mode: false
+    });
+
+    timeline.push({
+      type: jsPsychHtmlKeyboardResponse,  
+      stimulus: 'Thank you for your participation. You may now close the window.'
+    });
+
+
+    /* start the experiment */
+    jsPsych.run(timeline);

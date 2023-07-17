@@ -23,6 +23,9 @@ document.body.style.backgroundColor = '#b9b8b8';
       stimulus: 'Welcome to the experiment.',
       choices: ['Continue'],
     });
+    
+    /* change this based on how many questions you have*/
+    var trial_number = 4;
 
     /* define instructions trial text and button*/
     var instructions = {
@@ -31,6 +34,9 @@ document.body.style.backgroundColor = '#b9b8b8';
         <p>In this experiment, you will be asked several questions.</p><p>
         Please answer truthfully. </p>`,
         choices: ['Continue'],
+      data: {
+        task: 'instruction'
+      },
       on_start: function() {
         // set progress bar to 0 at the start of experiment
         jsPsych.setProgressBar(0);
@@ -42,6 +48,9 @@ document.body.style.backgroundColor = '#b9b8b8';
         /*gender- multiple choice*/
     var gender = {
       type: jsPsychSurveyMultiSelect,
+      data: {
+        task: 'gender'
+      },
       questions: [
         {prompt: 'What gender do you identify with?',
           options: ['Female', 'Male', 'Non-binary', 'Other'],
@@ -52,29 +61,40 @@ document.body.style.backgroundColor = '#b9b8b8';
         // at the end of each trial, update the progress bar
         // based on the current value and the proportion to update for each trial
             var curr_progress_bar_value = jsPsych.getProgressBarCompleted();
-            jsPsych.setProgressBar(curr_progress_bar_value + (1/100));
+            jsPsych.setProgressBar(curr_progress_bar_value + (1/trial_number));
         },
         },
       ]
     };
     timeline.push(gender);
     
-        /* country text input*/
-    var country = {
+    var like_pop = {
+    type: jsPsychHtmlSliderResponse,
+    stimulus: 'How much do you like pop music?',
+    data: {task:'like_pop'},
+    require_movement: true
+    };
+    timeline.push(like_pop);
+    
+        /* practice text input*/
+    var practice = {
       type: jsPsychSurveyText,
+      data: {
+        task: 'practice'
+      },
       questions: [
-        {prompt: 'What is your country of residence?', 
+        {prompt: 'How many hours do you listen to music listening per week (approx.)', 
         required: true,
         on_finish: function() {
         // at the end of each trial, update the progress bar
         // based on the current value and the proportion to update for each trial
           var curr_progress_bar_value = jsPsych.getProgressBarCompleted();
-          jsPsych.setProgressBar(curr_progress_bar_value + (1/100));
+          jsPsych.setProgressBar(curr_progress_bar_value + (1/trial_number));
         },
         },
       ]
     };
-    timeline.push(country);
+    timeline.push(practice);
 
     // exit fullscreen mode
     timeline.push({

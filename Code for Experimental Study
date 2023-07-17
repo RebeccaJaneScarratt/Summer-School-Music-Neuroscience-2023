@@ -28,8 +28,8 @@ document.body.style.backgroundColor = '#b9b8b8';
     var preload = {
       type: jsPsychPreload,
       stimlus: [
-                "A Great Big World, Christina Aguilera - Say Something.wav",
-                "You Me At Six - No One Does It Better.wav"]
+                "40percentfaster.wav",
+                "40percentslower.wav"]
     }
     /* add to timeline */
     timeline.push(preload);
@@ -37,12 +37,10 @@ document.body.style.backgroundColor = '#b9b8b8';
     /* define instructions trial */
     var instructions = {
       type: jsPsychHtmlButtonResponse,
+      data: {task: 'instruction'},
       stimulus: `
-        <p>In this experiment, you will hear 7 second exerpts of 
-        musical pieces.</p><p> After listening to the exerpt, you will 
-        be asked to rate your familiarity with the piece. 
-        </p><p> At the end, there will be some questions
-        about you and the music you usually listen to. </p>`,
+        <p>In this experiment, you will hear 2 excerpts played on the violin.</p>
+        <p> After each track, you must indicate how much tension you felt in the excerpt.</p>`,
         choices: ['Continue'],
       on_start: function() {
         // set progress bar to 0 at the start of experiment
@@ -54,8 +52,8 @@ document.body.style.backgroundColor = '#b9b8b8';
 
     /* define trial stimuli array for timeline variables */
     var test_stimuli = [
-    { stimulus: "A Great Big World, Christina Aguilera - Say Something.wav"},
-               { stimulus: "You Me At Six - No One Does It Better.wav"}
+    { stimulus: "40percentslower.wav"},
+               { stimulus: "40percentfaster.wav"}
     ];
     
     var trial_number = 4; /* make sure to change this numebr (4) depending on the number of trials you have */
@@ -63,9 +61,10 @@ document.body.style.backgroundColor = '#b9b8b8';
     /* play audio and ask familiarity, play audio then rate on a slider*/
     var test = {
       type: jsPsychAudioSliderResponse,
-      prompt: '<p>How familiar are you with this musical piece?</p>',
+      data: {task: 'familiarity'},
+      prompt: '<p>How much tension did you feel in this excerpt?</p>',
       stimulus: jsPsych.timelineVariable('stimulus'), /* this stimulus refers to the stimulus in test_stimuli */
-      labels: ['Very unfamiliar', 'Very familiar'],
+      labels: ['No tension', 'A lot of tension'],
       require_movement: false, /* change to true if respondent needs to answer this question or can skip */
       on_finish: function() {
         // at the end of each trial, update the progress bar
@@ -87,6 +86,7 @@ document.body.style.backgroundColor = '#b9b8b8';
         /*gender- multiple choice*/
     var gender = {
       type: jsPsychSurveyMultiSelect,
+      data: {task: 'gender'},
       questions: [
         {prompt: 'What gender do you identify with?',
           options: ['Female', 'Male', 'Non-binary', 'Other'],

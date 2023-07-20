@@ -10,7 +10,7 @@ document.body.style.backgroundColor = '#b9b8b8';
   var instructions = `
         <p>In this experiment, you will hear 2 excerpts played on the violin.</p>
         <p> After each track, you must indicate how much tension you felt in the excerpt.</p>`; /* you can change what is between the apostrophe */
-
+  var trial_number = 4; /* here you can add the number of trials in your experiment. This is what will control how quickly the progress bar fills up */
 
     /* do not touch this */ 
     /* create a progress bar */

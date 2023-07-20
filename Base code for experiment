@@ -53,6 +53,12 @@ document.body.style.backgroundColor = '#b9b8b8';
 
 //////* Do not touch after this*////
 
+    // exit fullscreen mode
+    timeline.push({
+      type: jsPsychFullscreen,
+      fullscreen_mode: false
+    });
+
 /* end of experiment */
     timeline.push({
       type: jsPsychHtmlKeyboardResponse,  

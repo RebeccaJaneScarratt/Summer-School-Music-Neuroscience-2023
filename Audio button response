@@ -1,0 +1,56 @@
+/* make sure to put the necessary start code of your experiment before here */
+
+/* This code will play an audio file and let participants select response buttons */
+/* First, we will load the stimuli. The we will create the screen that defines that type of trial and then we will create the loop that we show the screen for each stimulus in a random order*/
+
+    /* preload stimuli. ATTENTION you still have to upload the files to cognition.run */
+    var preload = {
+      type: jsPsychPreload,
+      stimlus: [
+                "40percentfaster.wav",
+                "40percentslower.wav"]
+    }
+    /* add to timeline */
+    timeline.push(preload);
+
+
+    /* you now need to tell the script that what you just uploaded will be the stimuli for your trials. */
+    var audio_button_stimuli = [
+              { stimulus: "40percentslower.wav"},
+               { stimulus: "40percentfaster.wav"}
+    ];
+
+    /* here you can edit the different button choices and the prompt */
+    var audio_button_choices = ['Low', 'High'];
+
+    var audio_button_prompt = "<p>Is the pitch high or low?</p>";
+
+
+
+    /* you shouldn't need to edit anything passed this point */
+    var audio_button_trial = {
+        type: jsPsychAudioButtonResponse,
+        data: {task: 'audio_button'}, /* this is what your column of data will be called */
+        stimulus: jsPsych.timelineVariable('stimulus'), /* this stimulus refers to the stimulus in test_stimuli */
+        choices: audio_button_choices,
+        prompt: audio_button_prompt,
+        response_allowed_while_playing: false, /* this means that the audio clip needs to finish before participants can answer */
+        on_finish: function() {
+                // at the end of each trial, update the progress bar
+                // based on the current value and the proportion to update for each trial
+                var curr_progress_bar_value = jsPsych.getProgressBarCompleted();
+                jsPsych.setProgressBar(curr_progress_bar_value + (1/trial_number)); 
+              }
+    };
+
+    /* now we create the loop that will randomly send each stimulus to the 'audio_button_trial' trial */
+    var test_procedure = {
+      timeline: [audio_button_trial],
+      timeline_variables: audio_button_stimuli,
+      randomize_order: true
+    };
+    /* add to timeline */
+    timeline.push(test_procedure);
+
+
+/* Don't forget to add the end part to your experiment */

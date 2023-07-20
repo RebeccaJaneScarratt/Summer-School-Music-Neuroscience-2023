@@ -17,7 +17,7 @@ document.body.style.backgroundColor = '#b9b8b8';
       fullscreen_mode: true
     });
 
-    /* create wwelcome message and add to timeline */
+    /* create welcome message and add to timeline */
     timeline.push({
       type: jsPsychHtmlButtonResponse,
       stimulus: 'Welcome to the experiment.',

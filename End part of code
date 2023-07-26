@@ -1,0 +1,16 @@
+//////* Do not touch after this*////
+
+    // exit fullscreen mode
+    timeline.push({
+      type: jsPsychFullscreen,
+      fullscreen_mode: false
+    });
+
+/* end of experiment */
+    timeline.push({
+      type: jsPsychHtmlKeyboardResponse,  
+      stimulus: 'Thank you for your participation. You may now close the window.'
+    });
+
+    /* start the experiment */
+    jsPsych.run(timeline);

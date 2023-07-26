@@ -1,0 +1,49 @@
+/* make sure to put the necessary start code of your experiment before here */
+
+/* This code will play ask questions in a survey like manner */
+/* First, we will define the questions and the scale. The we will add these to the trial screen. */
+
+
+    /* Define questions and scale. */
+    /* here you can edit */
+    var likert_scale = [
+        "Strongly Disagree", 
+        "Disagree", 
+        "Neutral", 
+        "Agree", 
+        "Strongly Agree"
+    ];
+
+    var likert_questions = [
+    {prompt: "I like singing.", name: 'Singing', labels: likert_scale},
+    {prompt: "I like playing the drums.", name: 'Drums', labels: likert_scale},
+    {prompt: "I like playing the piano.", name: 'Piano', labels: likert_scale},
+  ];
+
+    var likert_text = 'How much do you agree with the following statements';
+
+    /* you shouldn't need to edit anything passed this point */
+    var likert_survey_trial = {
+        type: jsPsychSurveyLikert,
+        data: {task: 'likert_survey'}, /* this is what your column of data will be called */
+        questions: likert_questions,
+        preamble: likert_text,
+        response_allowed_while_playing: false, /* this means that the audio clip needs to finish before participants can answer */
+        on_finish: function() {
+                // at the end of each trial, update the progress bar
+                // based on the current value and the proportion to update for each trial
+                var curr_progress_bar_value = jsPsych.getProgressBarCompleted();
+                jsPsych.setProgressBar(curr_progress_bar_value + (1/trial_number)); 
+              }
+    };
+
+    /* now we create the loop that will randomly send each stimulus to the 'audio_button_trial' trial */
+    var test_procedure_likert_survey = {
+      timeline: [likert_survey_trial],
+      randomize_order: true
+    };
+    /* add to timeline */
+    timeline.push(test_procedure_likert_survey);
+
+
+/* Don't forget to add the end part to your experiment */

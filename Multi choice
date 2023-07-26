@@ -1,0 +1,61 @@
+/* make sure to put the necessary start code of your experiment before here */
+
+/* This code will play ask questions in a survey like manner where more than one answer is possible*/
+/* First, we will define the questions and the scale for each quesiton. The we will add these to the trial screen. */
+
+
+    /* Define questions and scale. */
+    /* here you can edit */
+    var options_multi_select_1 = [
+        "Pizza", 
+        "Pasta", 
+        "Toast", 
+        "Ramen", 
+        "Potatoes"
+    ];
+
+  /* if you want to have two difference set of response options, you can use this code */
+  var options_multi_select_2 = [
+        "Pink", 
+        "Purple", 
+        "Orange", 
+        "Red", 
+        "Yellow",
+        "Green",
+        "Blue"
+    ];
+
+    var multi_select_questions = [
+    {prompt: "What food do you like?", options: options_multi_select_1, required: true, horiontal: true, name: 'like_foods'},
+    {prompt: "How much do you like Paris?", options: options_multi_select_1, required: true, horiontal: true, name: 'dislike_foods'},
+    {prompt: "What colours do you like?", options: options_multi_select_2, required: true, horiontal: true, name: 'colour'},
+    ];
+
+    var survey_text = "Please answer these questions";
+
+
+
+    /* you shouldn't need to edit anything passed this point */
+    var multi_select_trial = {
+        type: jsPsychSurveyMultiSelect,
+        data: {task: 'multi_select'}, /* this is what your column of data will be called */
+        questions: multi_select_questions,
+        preamble: survey_text,
+        on_finish: function() {
+                // at the end of each trial, update the progress bar
+                // based on the current value and the proportion to update for each trial
+                var curr_progress_bar_value = jsPsych.getProgressBarCompleted();
+                jsPsych.setProgressBar(curr_progress_bar_value + (1/trial_number)); 
+              }
+    };
+
+    /* now we create the loop that will randomly send each stimulus to the 'audio_button_trial' trial */
+    var test_procedure_multi_select = {
+      timeline: [multi_select_trial],
+      randomize_order: true
+    };
+    /* add to timeline */
+    timeline.push(test_procedure_multi_select);
+
+
+/* Don't forget to add the end part to your experiment */

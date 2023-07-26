@@ -1,0 +1,32 @@
+/* make sure to put the necessary start code of your experiment before here */
+
+/* This code will display a text let participants select response buttons */
+/* First, we will define the text. Then, we will create the screen that defines that type of trial and then we will create the loop that we show the screen for each stimulus in a random order*/
+
+
+    /* here you can edit the different button choices and the prompt */
+    var text_button_choices = ['Non-musician', 'Musician'];
+
+    var text_button_stimulus = "<p>Is the pitch high or low?</p>";
+
+
+
+    /* you shouldn't need to edit anything passed this point */
+    var text_button_trial = {
+        type: jsPsychHtmlButtonResponse,
+        data: {task: 'text_response'}, /* this is what your column of data will be called */
+        choices: text_button_choices,
+        stimulus: text_button_stimulus,
+        on_finish: function() {
+                // at the end of each trial, update the progress bar
+                // based on the current value and the proportion to update for each trial
+                var curr_progress_bar_value = jsPsych.getProgressBarCompleted();
+                jsPsych.setProgressBar(curr_progress_bar_value + (1/trial_number)); 
+              }
+    };
+
+    /* add to timeline */
+    timeline.push(text_button_trial);
+
+
+/* Don't forget to add the end part to your experiment */

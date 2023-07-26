@@ -27,11 +27,11 @@
 
     var multi_select_questions = [
     {prompt: "What food do you like?", options: options_multi_select_1, required: true, horiontal: true, name: 'like_foods'},
-    {prompt: "How much do you like Paris?", options: options_multi_select_1, required: true, horiontal: true, name: 'dislike_foods'},
+    {prompt: "What foods do you dislike?", options: options_multi_select_1, required: true, horiontal: true, name: 'dislike_foods'},
     {prompt: "What colours do you like?", options: options_multi_select_2, required: true, horiontal: true, name: 'colour'},
     ];
 
-    var survey_text = "Please answer these questions";
+    var survey_text_select = "Please answer these questions";
 
 
 
@@ -40,7 +40,7 @@
         type: jsPsychSurveyMultiSelect,
         data: {task: 'multi_select'}, /* this is what your column of data will be called */
         questions: multi_select_questions,
-        preamble: survey_text,
+        preamble: survey_text_select,
         on_finish: function() {
                 // at the end of each trial, update the progress bar
                 // based on the current value and the proportion to update for each trial

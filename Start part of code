@@ -1,0 +1,51 @@
+document.body.style.backgroundColor = '#b9b8b8';
+  document.body.style.backgroundImage = "url('music.png')";
+  document.body.style.backgroundRepeat = "no-repeat";
+  document.body.style.backgroundSize = '300px';
+  document.body.style.fontSize = '22px';
+
+   //////* variables you can edit *////////
+
+  var welcome_message = 'Welcome to the experiment'; /* you can change what is between the apostrophe */
+  var instructions = `
+        <p>In this experiment, you will hear 2 excerpts played on the violin.</p>
+        <p> After each track, you must indicate how much tension you felt in the excerpt.</p>`; /* you can change what is between the apostrophe */
+
+  var trial_number = 4; /* here you can add the number of trials (number of questions) in your experiment. This is what will control how quickly the progress bar fills up */
+
+    /* do not touch this */ 
+    /* create a progress bar */
+    var jsPsych = initJsPsych({
+    show_progress_bar: true,
+    auto_update_progress_bar: false
+    });
+
+    /* initialize the timeline */
+    var timeline = [];
+    timeline.push({
+      type: jsPsychFullscreen,
+      fullscreen_mode: true
+    });
+
+    /* create welcome message and add to timeline */
+    timeline.push({
+      type: jsPsychHtmlButtonResponse,
+      stimulus: welcome_message,
+      choices: ['Continue'],
+    });
+
+/* define instructions trial */
+    var instructions = {
+      type: jsPsychHtmlButtonResponse,
+      data: {task: 'instruction'},
+      stimulus: instructions,
+        choices: ['Continue'],
+      on_start: function() {
+        // set progress bar to 0 at the start of experiment
+        jsPsych.setProgressBar(0);
+      }
+    };
+    /* add to timeline */
+    timeline.push(instructions);
+
+//////* below here is where you can add the questions*///////

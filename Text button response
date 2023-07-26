@@ -7,14 +7,14 @@
     /* here you can edit the different button choices and the prompt */
     var text_button_choices = ['Non-musician', 'Musician'];
 
-    var text_button_stimulus = "<p>Is the pitch high or low?</p>";
+    var text_button_stimulus = "<p>Are you a musician or non-musician?</p>";
 
 
 
     /* you shouldn't need to edit anything passed this point */
     var text_button_trial = {
         type: jsPsychHtmlButtonResponse,
-        data: {task: 'text_response'}, /* this is what your column of data will be called */
+        data: {task: 'text_button_response'}, /* this is what your column of data will be called */
         choices: text_button_choices,
         stimulus: text_button_stimulus,
         on_finish: function() {

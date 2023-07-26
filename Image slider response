@@ -1,0 +1,61 @@
+/* make sure to put the necessary start code of your experiment before here */
+
+/* This code will show an image and let participants select response buttons */
+/* First, we will load the stimuli. Then we will create the screen that defines that type of trial. Then we will create the loop that we shows the screen for each stimulus in a random order*/
+
+    /* preload stimuli. ATTENTION you still have to upload the files to cognition.run */
+    var preload = {
+      type: jsPsychPreload,
+      stimlus: [
+                "trumpet.jpg",
+                "saxophone.jpg",
+                "piccolo.jpg",
+                "tuba.jpg"]
+    }
+    /* add to timeline */
+    timeline.push(preload);
+
+
+    /* you now need to tell the script that what you just uploaded will be the stimuli for your trials. */
+    var image_slider_stimuli = [
+              { stimulus: "trumpet.jpg"},
+               { stimulus: "saxophone.jpg"},
+               { stimulus: "piccolo.jpg"},
+               { stimulus: "tuba.jpg"}
+    ];
+
+    /* here you can edit the different button choices and the prompt */
+    var image_slider_labels = ['Low', 'High'];
+
+    var image_slider_prompt = "<p>What is the pitch of this instrument on a scale of all pitches of musical instruments?</p>";
+
+
+
+    /* you shouldn't need to edit anything passed this point */
+    var image_slider_trial = {
+        type: jsPsychImageSliderResponse,
+        data: {task: 'image_slider'}, /* this is what your column of data will be called */
+        stimulus: jsPsych.timelineVariable('stimulus'), /* this stimulus refers to the stimulus in test_stimuli */
+        labels: image_slider_labels,
+        prompt: image_slider_prompt,
+        response_allowed_while_playing: false, /* this means that the audio clip needs to finish before participants can answer */
+        require_movement: true, /* this means that the participant needs to click on the slider to be able to continue. It stops participants just clicking through*/
+        on_finish: function() {
+                // at the end of each trial, update the progress bar
+                // based on the current value and the proportion to update for each trial
+                var curr_progress_bar_value = jsPsych.getProgressBarCompleted();
+                jsPsych.setProgressBar(curr_progress_bar_value + (1/trial_number)); 
+              }
+    };
+
+    /* now we create the loop that will randomly send each stimulus to the 'audio_button_trial' trial */
+    var test_procedure_image_slider = {
+      timeline: [image_slider_trial],
+      timeline_variables: image_slider_stimuli,
+      randomize_order: true
+    };
+    /* add to timeline */
+    timeline.push(test_procedure_image_slider);
+
+
+/* Don't forget to add the end part to your experiment */

@@ -28,7 +28,6 @@
         data: {task: 'likert_survey'}, /* this is what your column of data will be called */
         questions: likert_questions,
         preamble: likert_text,
-        response_allowed_while_playing: false, /* this means that the audio clip needs to finish before participants can answer */
         on_finish: function() {
                 // at the end of each trial, update the progress bar
                 // based on the current value and the proportion to update for each trial

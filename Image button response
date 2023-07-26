@@ -49,13 +49,13 @@
     };
 
     /* now we create the loop that will randomly send each stimulus to the 'audio_button_trial' trial */
-    var test_procedure = {
+    var test_procedure_image_button = {
       timeline: [image_button_trial],
       timeline_variables: image_button_stimuli,
       randomize_order: true
     };
     /* add to timeline */
-    timeline.push(test_procedure);
+    timeline.push(test_procedure_image_button);
 
 
 /* Don't forget to add the end part to your experiment */

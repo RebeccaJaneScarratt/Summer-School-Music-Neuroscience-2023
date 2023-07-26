@@ -1,0 +1,33 @@
+/* make sure to put the necessary start code of your experiment before here */
+
+/* This code will display a text let participants select their response with a slider */
+/* First, we will define the text and the slider text. Then, we will create the screen for the trial*/
+
+
+    /* here you can edit the different button choices and the prompt */
+    var text_slider_labels = ['Not at all relaxed', 'Very relaxed'];
+
+    var text_slider_stimulus = "<p>How relaxed are you right now?</p>";
+
+
+
+    /* you shouldn't need to edit anything passed this point */
+    var text_slider_trial = {
+        type: jsPsychHtmlSliderResponse,
+        data: {task: 'text_slider_response'}, /* this is what your column of data will be called */
+        labels: text_slider_labels,
+        stimulus: text_slider_stimulus,
+        require_movement: true,
+        on_finish: function() {
+                // at the end of each trial, update the progress bar
+                // based on the current value and the proportion to update for each trial
+                var curr_progress_bar_value = jsPsych.getProgressBarCompleted();
+                jsPsych.setProgressBar(curr_progress_bar_value + (1/trial_number)); 
+              }
+    };
+
+    /* add to timeline */
+    timeline.push(text_slider_trial);
+
+
+/* Don't forget to add the end part to your experiment */

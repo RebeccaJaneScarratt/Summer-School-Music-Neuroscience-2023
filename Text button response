@@ -1,7 +1,7 @@
 /* make sure to put the necessary start code of your experiment before here */
 
-/* This code will display a text let participants select response buttons */
-/* First, we will define the text. Then, we will create the screen that defines that type of trial and then we will create the loop that we show the screen for each stimulus in a random order*/
+/* This code will display a text let participants select their response with buttons */
+/* First, we will define the text for the question and the buttons. Then, we will create the screen with that text and the buttons*/
 
 
     /* here you can edit the different button choices and the prompt */

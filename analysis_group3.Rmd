@@ -1,0 +1,100 @@
+---
+title: "Analysis Group 3"
+author: "Rebecca Scarratt"
+date: "2023-07-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Again, we start by loading the data, setting the working directory and loading in the pre-processed data.
+
+```{r load packages, working directory and data}
+# we load the packages
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+
+# Set seed for reproducability
+set.seed(1)
+
+# set working directory
+setwd("C:/Users/au672599/OneDrive - Aarhus Universitet/Documents/PhD Rebecca/Summer School/Online studies data")
+
+# load in the data file. Note this only works with a .csv file. Here you need to change the name of the file.
+
+data <- read.csv('survey_data_group3.csv')
+data$X <- NULL
+
+colnames(data)[2] ="song"
+
+# if it worked correctly, you should now see the dataframe 'data' appear in the Environment panel. You can click on it, to open it and check that it looks like your messy data file.
+```
+
+
+## Descriptive Statistics
+
+First, let's start by looking at the data. How many respondents do we have?
+Calculate what you need from the GoldMSI, the distribution of ratings per emotion and per song.
+
+```{r descriptive statistics}
+
+print(length(unique(data$run_id)))
+# whatever outputs here is the number of respondents
+
+# I haven't done the calculation from GoldMSI because I don't know what you want to do, you can try or I can come help
+
+
+# summary of ratings per emotion
+results_table_per_emotion<- data %>%
+  group_by(emotion) %>% 
+  summarise(mean = mean(response),
+            max = max(response),
+            min = min(response))
+
+# summary of ratings per song
+results_table_per_song<- data %>%
+  group_by(song) %>% 
+  summarise(mean = mean(response),
+            max = max(response),
+            min = min(response))
+
+# summary of ratings per song for each emotion
+results_table_per_song_per_emotion<- data %>%
+  group_by(song, emotion) %>% 
+  summarise(mean = mean(response),
+            max = max(response),
+            min = min(response))
+
+```
+
+## ploting
+
+```{r plotting}
+
+# different plot options
+
+ggplot(data, aes(x=emotion, y=response ))+
+geom_boxplot()+
+  labs(title = 'Rating per emotion')
+
+ggplot(data, aes(x=song, y=response ))+
+geom_boxplot()+
+  labs(title = 'Rating per song')
+
+ggplot(data, aes(x=emotion, y=response, fill = song ))+
+geom_boxplot()+
+  labs(title = 'Rating per song')
+
+ggplot(data, aes(x=emotion, y=response ))+
+geom_boxplot()+
+  labs(title = 'Rating per song')+
+  facet_wrap(~song)
+
+```
+
+## Inferential statistics
+
+This is where we want to do statistics to see if there are any significant differences between each of these conditions.

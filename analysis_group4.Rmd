@@ -1,0 +1,121 @@
+---
+title: "Analysis Group 4"
+author: "Rebecca Scarratt"
+date: "2023-07-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Again, we start by loading the data, setting the working directory and loading in the pre-processed data.
+
+```{r load packages, working directory and data}
+# we load the packages
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+
+# Set seed for reproducability
+set.seed(1)
+
+# set working directory
+setwd("C:/Users/au672599/OneDrive - Aarhus Universitet/Documents/PhD Rebecca/Summer School/Online studies data")
+
+# load in the data file. Note this only works with a .csv file. Here you need to change the name of the file.
+
+data <- read.csv('survey_data_group4.csv')
+data$X <- NULL
+
+# if it worked correctly, you should now see the dataframe 'data' appear in the Environment panel. You can click on it, to open it and check that it looks like your messy data file.
+```
+
+
+## Descriptive Statistics
+
+First, let's start by looking at the data. How many respondents do we have?
+What distribution of colours do we have per song? 
+What distribution of familiarity do we have per song? 
+What distribution of age do we have per song? 
+What distribution of favourite colours do we have per song? 
+
+```{r descriptive statistics}
+
+print(length(unique(data$run_id)))
+# whatever outputs here is the number of respondents
+
+# distribution of age
+data$age <- factor(data$age, levels = c("18 - 25", "26 - 32", "33 - 40", "41 or older"))
+summary(data$age)
+
+# distribution of favourite colours
+data$favourite_colour <- factor(data$favourite_colour)
+summary(data$favourite_colour)
+
+# colour per song
+# note: here you can change the numbers for the names of the colours if you like
+data$selected_colour <- factor(data$selected_colour)
+summary(data$selected_colour)
+
+results_table_colour_per_song <- data %>%
+  group_by(song) %>% 
+  summarise('0' = sum(selected_colour == 0),
+            '1' = sum(selected_colour == 1),
+            '2' = sum(selected_colour == 2),
+            '3' = sum(selected_colour == 3),
+            '4' = sum(selected_colour == 4),
+            '5' = sum(selected_colour == 5))
+
+# familiarity per song
+results_table_fam_per_song <- data %>%
+  group_by(song) %>% 
+  summarise(mean= mean(familiarity),
+            max= max(familiarity),
+            min = min(familiarity))
+
+# familiarity per colour
+results_table_fam_per_colour <- data %>%
+  group_by(selected_colour) %>% 
+  summarise(mean= mean(familiarity),
+            max= max(familiarity),
+            min = min(familiarity))
+
+# we can also do colour per song and familiarity
+#although this doesn't actually tell you much
+results_table_colour_per_song_fam <- data %>%
+  group_by(song, familiarity) %>% 
+  summarise('0' = sum(selected_colour == 0),
+            '1' = sum(selected_colour == 1),
+            '2' = sum(selected_colour == 2),
+            '3' = sum(selected_colour == 3),
+            '4' = sum(selected_colour == 4),
+            '5' = sum(selected_colour == 5))
+```
+
+## ploting
+
+```{r plotting}
+
+ggplot(data, aes(x=song, y=selected_colour ))+
+geom_boxplot()+
+  labs(title = 'Selected colour per song')
+
+ggplot(data, aes(x=song, y=familiairty ))+
+geom_boxplot()+
+  labs(title = 'Familiarity per song')
+
+ggplot(data, aes(x=selected_colour, y=familiarity ))+
+geom_boxplot()+
+  labs(title = 'Familiarity per selected colour')
+
+ggplot(data, aes(x=song, y=familiarity, fill = selected_colour))+
+geom_boxplot()+
+  labs(title = 'Selected colour per song and familiarity')
+# you could probably make the colours in the plot correspond to what they are in real life
+
+```
+
+## Inferential statistics
+
+This is where we want to do statistics to see if there are any significant differences between each of these conditions.

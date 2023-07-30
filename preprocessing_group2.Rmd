@@ -1,0 +1,122 @@
+---
+title: "preprocessing_group2"
+author: "Rebecca Scarratt"
+date: "2023-07-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ 
+## Introduction
+
+This is a script that will transform your data file from a mess of rows and columns that don't make any sense to a structure dataset.
+
+in every R script, we start by loading the packages we will be using, defining the working directory and loading in the data. Make sure that the data file in the working directory. The working directory is the only folder that R can see when running this script , so it's important that all the files you will need are in that folder. It's also where the output files will save.
+
+```{r load packages, working directory and data}
+# we load the packages
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+
+# Set seed for reproducability
+set.seed(1)
+
+# set working directory
+setwd("C:/Users/au672599/OneDrive - Aarhus Universitet/Documents/PhD Rebecca/Summer School/Online studies data")
+
+# load in the data file. Note this only works with a .csv file. Here you need to change the name of the file.
+
+data <- read.csv2('survey_results_group2.csv')
+
+# if it worked correctly, you should now see the dataframe 'data' appear in the Environment panel. You can click on it, to open it and check that it looks like your messy data file.
+```
+
+## Data reducing
+
+Now that the data is loaded, we can start removing columns and rows that we don't need and making what we do need be more intuitive.
+Of course, we don't change anything of what the cells contain, so it's important to check that we don't remove too much that would modify the data.
+How exactly to do this step depends on the experiment.
+
+```{r removing rows and columns}
+# first, let's remove the rows we don't want. In the task column, it tells us what type of question/display we had. It saves information for all of them, but we are not always interested in all of them. This depends on each experiment but in your case, you are only interested in 'audio_slider' and 'task_button_response' as that's where participants responses are stored. The rest can go.
+
+data <- subset(data, task %in% c('audio_slider', 'text_button_response'))
+
+# we want to keep columns 'run_id and response'. The rest we can remove as it doesn't tell us anything important.
+
+data<- data[c('run_id', 'stimulus', 'response')]
+
+# now you can open data again to make sure you kept and deleted the right things. If there is a mistake, you can always load the data again and start again.
+
+```
+
+## Data reorganisation
+
+Now that we have less rows and columns to deal with, we can make them be more intuitive.
+At this point, it is sometimes helpful to draw out what type of table/dataframe you would want your data to look like in the end, and then work step by step to that goal.
+
+```{r formating}
+# let's rename each stimulus
+data <- data %>%
+  mutate(stimulus = case_when(
+    stimulus == "high_complex_1.wav" ~ "high_1",
+    stimulus == "high_complex_2.wav" ~ "high_2",
+    stimulus == "mid_complex_1.wav" ~ "medium_1",
+    stimulus == "mid_complex_2.wav" ~ "medium_2",
+    stimulus == "low_complex_1.wav" ~ "low_1",
+    stimulus == "low_complex_2.wav" ~ "low_2",
+    stimulus == "<p>How would you define your musical experience?</p>" ~ "musicalExpertise",
+    TRUE ~ stimulus  # If none of the conditions match, keep the original value
+  ))
+
+data[c('complexity', 'trial')]<- str_split_fixed(data$stimulus, '_', 2)
+
+data[c('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42', '43')] <- str_split_fixed(data$response, '"', 43)
+
+data <- data[c('run_id', 'complexity', 'trial', 'response')]
+
+# Next we need to remove any participant that didn't complete the survey.
+
+# removing non-complete participants
+
+data %>% count(run_id)
+# as you can see in the output of this, every participant should have 7 rows associated with it, because there are 6 trials and one question about musicality.
+
+# here you can remove all the run_ids of participants who have less than 4 'counts'/rows.
+
+# as there are a lot who just forgot the last question, let's keep the full dataset as full_data
+
+full_data <- data
+
+data <- subset(data, !(run_id %in% c('1', '2', '4', '5', '6', '10', '11', '12', '13')))
+
+# we can do the above comand again to check we now have removed the non-completing participants
+
+data %>% count(run_id)
+
+# Now we do a cool trick to make the data more readable per participant
+# but to do this, let's seperate musicalExpertise
+
+
+musicalExpertise <- subset(data, complexity == 'musicalExpertise')
+musicalExpertise <-musicalExpertise[c('run_id', 'response')]
+colnames(musicalExpertise)<- c('run_id', 'musical_expertise')
+
+data <- subset(data, complexity != 'musicalExpertise')
+
+data <- merge(data, musicalExpertise, by ='run_id')
+
+write.csv(data, 'survey_data_group2_nonpivoted.csv')
+
+data2<- data %>%
+  pivot_wider(names_from = complexity, values_from = response)
+
+# Now the dataset looks good and we can save the data and continue with the analysis
+
+write.csv(data2, 'survey_data_group2.csv')
+
+
+```

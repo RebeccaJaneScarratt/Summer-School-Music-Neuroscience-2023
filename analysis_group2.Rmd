@@ -1,0 +1,90 @@
+---
+title: "Analysis Group 2"
+author: "Rebecca Scarratt"
+date: "2023-07-29"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+Again, we start by loading the data, setting the working directory and loading in the pre-processed data.
+
+```{r load packages, working directory and data}
+# we load the packages
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+
+# Set seed for reproducability
+set.seed(1)
+
+# set working directory
+setwd("C:/Users/au672599/OneDrive - Aarhus Universitet/Documents/PhD Rebecca/Summer School/Online studies data")
+
+# load in the data file. Note this only works with a .csv file. Here you need to change the name of the file.
+
+data <- read.csv('survey_data_group2.csv')
+data$X <- NULL
+
+# if it worked correctly, you should now see the dataframe 'data' appear in the Environment panel. You can click on it, to open it and check that it looks like your messy data file.
+```
+
+## Descriptive Statistics
+
+First, let's start by looking at the data.
+How many respondents do we have?
+What is the distribution of musical Exeprtise?
+What si the average response per rhythmic complexity?
+
+```{r descriptive statistics}
+
+print(length(unique(data$run_id)))
+# whatever outputs here is the number of respondents
+
+# describe the responses for high complexity
+print(summary(data$high))
+plot(density(data$high))
+
+# describe the responses for mid complexity
+print(summary(data$medium))
+plot(density(data$medium))
+
+# describe the responses for low complexity
+print(summary(data$low))
+plot(density(data$low))
+
+# distribution of musical expertise
+print(summary(data$musical_expertise))
+data$musical_expertise <- as.factor(data$musical_expertise)
+print(summary(data$musical_expertise))
+# it's up to you to interpret what these numbers mean
+```
+
+
+## ploting
+
+```{r plotting}
+# because we need the data non pivoted, let's load in the other data format we had
+no_pivot <- read.csv('survey_data_group2_nonpivoted.csv')
+
+no_pivot$complexity <- factor(no_pivot$complexity, levels = c("low", "medium", "high"))
+
+no_pivot$musical_expertise <- factor(no_pivot$musical_expertise)
+
+ggplot(no_pivot, aes(x=complexity, y=response ))+
+geom_boxplot()+
+  labs(title = 'Enjoyment per complexity')
+
+ggplot(no_pivot, aes(x=complexity, y=response, fill = musical_expertise))+
+geom_boxplot()+
+  labs(title = 'Enjoyment per complexity')
+
+```
+
+## Inferential statistics
+
+This is where we want to do statistics to see if there are any significant differences between each rhythmic complexity, and then whether the enjoyment in each complexity changes with the self-rated musical expertise

@@ -1,0 +1,112 @@
+---
+title: "Example Code Chunks"
+author: "Rebecca Scarratt"
+date: "2023-07-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r load data}
+# first we load packages, then set working directory
+
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+
+# Set seed for reproducability
+set.seed(1)
+
+# set working directory
+setwd("C:/Users/au672599/OneDrive - Aarhus Universitet/Documents/PhD Rebecca/Summer School")
+
+
+data <- read.csv('pre-processed-data.csv')
+data$X <- NULL
+
+data2 <- data %>% pivot_wider(names_from = trial, values_from = answer)
+```
+
+
+```{r check for normality}
+# do this for each variable, and for each group
+
+# Histogram method
+hist(data2$trial__slow) # this looks ok
+hist(data2$trial__fast) # this doens't look normal
+
+normal_data <- rnorm(200)
+hist(normal_data) # this is an example of normal data
+
+# Q-Q plot method
+qqnorm(data2$trial__slow)
+qqline(data2$trial__slow)
+
+qqnorm(data2$trial__fast)
+qqline(data2$trial__fast)
+
+# shapiro-wilk test
+shapiro.test(data2$trial__slow) # p-value more than 0.05 so normality is assumed
+shapiro.test(data2$trial__fast) # p-value more than 0.05 so normality is assumed
+```
+
+```{r check for heteroskedasticity}
+# if data is normal --> Levene's test of variance
+
+library(car)
+leveneTest(data$answer ~ data$trial) # p-value more than 0.05 so equal variance is assumed
+
+# if data not normal --> Bartlett's test
+bartlett.test(data$answer ~ data$trial) # p-value more than 0.05 so equal variance is assumed
+```
+
+
+```{r t-test}
+# if data is normal and equal variance
+t.test(data2$trial__slow, data2$trial__fast)
+# if p-value < significance level then there is a significant difference between the groups
+
+```
+
+```{r anova}
+# we need three groups for this so I'll add a third column trial_medium
+
+data2$trial_medium <- c(45,34,78,56,43,64,54,45)
+hist(data2$trial_medium)
+
+data <- data2 %>% pivot_longer(!c(run_id, gender), names_to='trial', values_to ='response')
+
+
+# ok now this is where the testing starts
+one.way.anova <-aov(response ~ trial, data= data)
+summary(one.way.anova)
+# if p-value < significance level then there is a significant difference between the groups
+
+# 2 way anova is if we want to add another variable to the equation
+two.way.anova <-aov(response ~ trial + gender, data= data)
+summary(two.way.anova)
+# if p-value < significance level for either variable then there is a significant difference between the groups
+
+# if there is a significant difference, we need to then find out which groups differ.
+# we do that with a post-hoc test. Usually Tukey
+
+tukey.two.way<-TukeyHSD(two.way.anova)
+
+tukey.two.way
+# here you can check which variable combinations don't have a confidence interval that spreads over 0. The direction of difference you can see in the 'diff' column or by plotting them
+```
+
+```{r mann-whitney}
+wilcox.test(data2$trial__slow, data2$trial__fast)
+# if p-value < significance level for either variable then there is a significant difference between the groups
+```
+
+```{r kruskal-wallis}
+# with more than 2 groups
+kruskal.test(response ~ trial, data = data)
+# if p-value < significance level for either variable then there is a significant difference between the groups
+```
+

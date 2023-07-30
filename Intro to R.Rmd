@@ -1,0 +1,151 @@
+---
+title: "Intro to R"
+author: "Rebecca Scarratt"
+date: "2023-07-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r code chunk}
+# to run a line click on it, then control + enter
+
+sum = 3+4
+
+# it appears in the environment window
+
+# first we load packages, then set working directory
+
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+
+# Set seed for reproducability
+set.seed(1)
+
+# set working directory
+setwd("C:/Users/au672599/OneDrive - Aarhus Universitet/Documents/PhD Rebecca/Summer School")
+
+# load in data
+
+data <- read.csv('example-experimental-study.csv')
+
+# you can click on it over there to inspect it
+
+```
+
+```{r}
+# cognition.run gives you more information that you need. So the first step to any data analysis is to select the variables and rows of interest
+
+# now we can filter on columns, to only get the informative columns that tells us what the task was and what they answered.
+
+data <- data[c('run_id', 'stimulus', 'response','task')]
+
+# we will be filtering the rows based on the column 'task' as that is the column that tells us the question that was asked for each row. 
+
+data <- subset(data, task %in% c('gender', 'trial'))
+
+data[data=="40percentslower.wav"] <- "_slow"
+data[data=="40percentfaster.wav"] <- "_fast"
+
+# Here 'response' has a strange format, so we run this code to only get the response
+subset_1 = subset(data, task %in% c('gender'))
+subset_1[c('Irrelevant', 'Irrelevant1', 'Irrelevant2', 'answer', 'Irrelevant4')] <- str_split_fixed(subset_1$response, '"', 5)
+subset_1 <- subset_1[c("run_id", "answer", 'task')]
+
+# because the 'task' doesn't give us information about which tempo of music was played, we have to merge it with 'stimulus'
+subset_2 = subset(data, task %in% c('trial'))
+colnames(subset_2)[3] <- 'answer'
+
+subset_2 <- subset_2 %>% unite('task', task,stimulus, remove = TRUE)
+
+# join two dataframes together
+data <- merge(subset_1, subset_2, by='run_id')
+
+# change the name of the columns
+colnames(data) <- c('run_id', 'gender', 'remove', 'trial', 'answer')
+
+# select and reorder the columns
+data<- data[c('run_id', 'gender', 'trial', 'answer')]
+
+
+# save the pre-processed data
+write.csv(data, 'pre-processed-data.csv')
+```
+
+
+```{r descriptives}
+# let's count how many people answered and check that they all answered the same number of questions
+data %>% count(run_id)
+
+data$gender <- as.factor(data$gender)
+summary(data$gender)
+# here we can see how many people chose Female-Male or Non-binary, be careful because here each participant is counted twice
+
+ # we make the variables be numeric
+data$answer <- as.numeric(data$answer)
+
+# we can also plot each variable to see its distribution
+plot(density(data$answer))
+
+```
+
+
+```{r plot data}
+trial_fast = subset(data, trial == 'trial__fast')
+trial_slow = subset(data, trial == 'trial__slow')
+
+plot(trial_fast$answer, trial_slow$answer, main="Plot trial fast vs trial slow",
+   xlab="trial fast", ylab="Trial slow", pch=19)
+
+ggplot(data, aes(x = trial, y = answer, fill = trial)) +
+    stat_summary(
+    fun = mean,
+    geom = "bar",
+    position = "dodge",
+    col = "black",
+    linewidth =0.5
+  ) +
+  scale_fill_manual(values = c("trial__fast" = "#f5f3e5", "trial__slow" = "#eed2a5"))+
+  xlab("Tempo") + # name of x axis
+  ylab("Mean Tension") + # name of y axis
+  ggtitle("Tension by Tempo") + # name of plot
+  theme_bw()
+
+
+ggplot(data, aes(x = trial, y = answer, fill = trial)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("trial__fast" = "#f5f3e5", "trial__slow" = "#eed2a5")) +
+  xlab("Tempo") +
+  ylab("Mean Tension") +
+  ggtitle("Tension by Tempo") +
+  theme_bw()
+
+ggplot(data, aes(x = trial, y = answer, fill = trial)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("trial__fast" = "#f5f3e5", "trial__slow" = "#eed2a5")) +
+  xlab("Tempo") +
+  ylab("Mean Tension") +
+  ggtitle("Tension by Tempo") +
+  theme_bw()
+
+
+# per participant
+ggplot(data, aes(x = trial, y = answer, fill=trial)) +
+  stat_summary(
+    fun = mean,
+    geom = "bar",
+    position = "dodge",
+    col = "black",
+    linewidth =0.5
+  ) +
+  scale_fill_manual(values = c("trial__fast" = "#f5f3e5", "trial__slow" = "#eed2a5"))+
+  xlab("Tempo") +
+  ylab("Mean Tension") +
+  ggtitle("Tension by Tempo") +
+  theme_bw()+
+  facet_wrap(~run_id)
+
+```

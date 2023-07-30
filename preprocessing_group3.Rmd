@@ -1,0 +1,132 @@
+---
+title: "Preprocessing Script for Summer School group 3"
+author: "Rebecca Scarratt"
+date: "2023-07-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ 
+## Introduction
+
+This is a script that will transform your data file from a mess of rows and columns that don't make any sense to a structure dataset.
+
+in every R script, we start by loading the packages we will be using, defining the working directory and loading in the data. Make sure that the data file in the working directory. The working directory is the only folder that R can see when running this script , so it's important that all the files you will need are in that folder. It's also where the output files will save.
+
+```{r load packages, working directory and data}
+# we load the packages
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+
+# Set seed for reproducability
+set.seed(1)
+
+# set working directory
+setwd("C:/Users/au672599/OneDrive - Aarhus Universitet/Documents/PhD Rebecca/Summer School/Online studies data")
+
+# load in the data file. Note this only works with a .csv file. Here you need to change the name of the file.
+
+data <- read.csv('survey_results_group3.csv')
+
+# if it worked correctly, you should now see the dataframe 'data' appear in the Environment panel. You can click on it, to open it and check that it looks like your messy data file.
+```
+
+## Data reducing
+
+Now that the data is loaded, we can start removing columns and rows that we don't need and making what we do need be more intuitive.
+Of course, we don't change anything of what the cells contain, so it's important to check that we don't remove too much that would modify the data.
+How exactly to do this step depends on the experiment.
+
+```{r removing rows and columns}
+# first, let's remove the rows we don't want. In the task column, it tells us what type of question/display we had. It saves information for all of them, but we are not always interested in all of them. This depends on each experiment but in your case, you are only interested in 'multi-choice, audio_slider and text_slider_response' as that's where participants responses are stored. The rest can go.
+
+data <- subset(data, task %in% c('multi_choice', 'audio_slider' , 'text_slider_response'))
+
+# we want to keep columns 'run_id, stimulus and response'. The rest we can remove as it doesn't tell us anything important.
+
+data<- data[c('run_id', 'stimulus', 'response')]
+
+# now you can open data again to make sure you kept and deleted the right things. If there is a mistake, you can always load the data again and start again.
+
+```
+
+## Data reorganisation
+
+Now that we have less rows and columns to deal with, we can make them be more intuitive.
+At this point, it is sometimes helpful to draw out what type of table/dataframe you would want your data to look like in the end, and then work step by step to that goal.
+
+```{r formating}
+# as you pointed out, the way the stimulus info is stored is not super helpful so we need to do some reorganisation of that. I can do it but it might not be the most elegant way
+
+# First, let's see how many people completed the experiment and remove anyone who didn't complete it.
+
+# removing non-complete participants
+
+data %>% count(run_id)
+# as you can see in the output of this, every participant should have 6*5 +1 = 31 rows associated with them.
+
+# here you can remove all the run_ids of participants who have less than 31 'counts'/rows.
+
+data <- subset(data, !(run_id %in% c('4', '5', '6', '8', '12', '14', '17', '18', '20', '21')))
+
+# we can do the above comand again to check we now have removed the non-completing participants
+
+data %>% count(run_id)
+
+# Now we can continue
+  
+data[data == ""] <- NA
+
+# let's split off the demographic and GoldMSI for now, we'll come back to this later
+MSI <- subset(data, is.na(stimulus))
+
+data <- na.omit(data)
+  
+# Repeat the vector to create a new data frame. Here you need to change the number of times the list of audio stimuli is repeated so that it matches the length of data. So if it is 240, we calculate 240/5=48, so we repeat it 15 times.
+emotion_vector <- c('happy', 'sad', 'tender', 'fear', 'anger')
+emotion_info <- data.frame(emotion = rep(emotion_vector, times = 48))
+
+data <- cbind(data, emotion_info)
+
+# do the same with audio info
+
+rownames(data) <- NULL
+
+# Find the indices of every fifth item
+indices <- seq(1, length(data$stimulus), by = 5)
+
+# Repeat each fifth item five times
+audio_info <- rep(data$stimulus[indices], each = 5)
+
+data <-cbind(data, audio_info)
+
+# remove unwanted columns
+
+data <- data[c('run_id', 'audio_info', 'emotion', 'response')]
+
+# now let's focus on the MSI information
+
+MSI[c('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25')] <- str_split_fixed(MSI$response, '"', 25)
+
+MSI <- MSI[c('run_id', '2','4', '6', '8', '10', '12', '14', '16', '18', '20', '22', '24')]
+
+MSI %>% pivot_wider(names_from = c('2', '6', '10','14','18', '22'), values_from = c('4','8','12','16','20', '24')) -> MSI
+
+colnames(MSI) = c('run_id', 'gender', 'msi1', 'msi2', 'msi3', 'msi4', 'msi5')
+
+data<- merge(data, MSI, by ='run_id')
+
+# check that everything matches up before proceeding
+
+# now we have finished the pre-processing of the data, we can save this final dataframe so we can continue the analyses and now have to always redo every preprocessing step
+
+write.csv(data, 'survey_data_group3.csv')
+```
+
+
+
+
+

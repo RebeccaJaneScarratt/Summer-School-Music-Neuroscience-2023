@@ -1,0 +1,130 @@
+---
+title: "Preprocessing Script for Summer School Group 6"
+author: "Rebecca Scarratt"
+date: "2023-07-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ 
+## Introduction
+
+This is a script that will transform your data file from a mess of rows and columns that don't make any sense to a structure dataset.
+
+in every R script, we start by loading the packages we will be using, defining the working directory and loading in the data. Make sure that the data file in the working directory. The working directory is the only folder that R can see when running this script , so it's important that all the files you will need are in that folder. It's also where the output files will save.
+
+```{r load packages, working directory and data}
+# we load the packages
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+
+# Set seed for reproducability
+set.seed(1)
+
+# set working directory
+setwd("C:/Users/au672599/OneDrive - Aarhus Universitet/Documents/PhD Rebecca/Summer School/Online studies data")
+
+# load in the data file. Note this only works with a .csv file. Here you need to change the name of the file.
+
+data <- read.csv('survey_results_group6.csv')
+
+# if it worked correctly, you should now see the dataframe 'data' appear in the Environment panel. You can click on it, to open it and check that it looks like your messy data file.
+```
+
+## Data reducing
+
+Now that the data is loaded, we can start removing columns and rows that we don't need and making what we do need be more intuitive.
+Of course, we don't change anything of what the cells contain, so it's important to check that we don't remove too much that would modify the data.
+How exactly to do this step depends on the experiment.
+
+```{r removing rows and columns}
+# first, let's remove the rows we don't want. In the task column, it tells us what type of question/display we had. It saves information for all of them, but we are not always interested in all of them. This depends on each experiment but in your case, you are only interested in 'multi_choice' and 'audio_slider' as that's where participants responses are stored. The rest can go.
+
+data <- subset(data, task %in% c('multi_choice', 'audio_slider'))
+
+# we want to keep columns 'run_id and response'. The rest we can remove as it doesn't tell us anything important.
+
+data<- data[c('run_id', 'stimulus', 'response', 'task')]
+
+# now you can open data again to make sure you kept and deleted the right things. If there is a mistake, you can always load the data again and start again.
+
+```
+
+## Data reorganisation
+
+Now that we have less rows and columns to deal with, we can make them be more intuitive.
+At this point, it is sometimes helpful to draw out what type of table/dataframe you would want your data to look like in the end, and then work step by step to that goal.
+
+```{r formating}
+# first we need to remove all participants that didn't complete the experiment
+
+# removing non-complete participants
+
+data %>% count(run_id)
+# as you can see in the output of this, every participant should have 12 rows associated with them, 6x2
+
+# here you can remove all the run_ids of participants who have less than 12 'counts'/rows.
+
+data <- subset(data, !(run_id %in% c('4', '5', '7', '8', '9', '12', '13', '14', '16', '17', '18')))
+
+# we can do the above comand again to check we now have removed the non-completing participants
+
+data %>% count(run_id)
+
+# Now we can continue
+
+
+# let's deal with the response column first.
+data[c('valence', '2', '3', 'familiarity', '5')] <- str_split_fixed(data$response, '"', 5)
+
+#remove unnecessary columns
+
+data <- data[c('run_id', 'stimulus', 'valence', 'familiarity', 'task')]
+
+#move familiarity up by one row
+data$familiarity <- lead(data$familiarity)
+
+data <- subset(data, !(task == 'multi_choice'))
+
+# remove the task column
+data$task <- NULL
+
+colnames(data)[2] = 'song'
+
+
+
+
+# Now we can add a column that has information about whether the song piece was instrumental or not
+# I am not sure I got everything right so check this
+
+song_info <- read.csv('song_info_group6.csv')
+
+data <- merge(data, song_info, by ='song')
+
+
+data <- data %>%
+  mutate(song = case_when(
+    song == "Eric-Clapton-Tears-In-Heaven-Ins.mp3" ~ "tears",
+    song == "Eric-Clapton-Tears-In-Heaven-Off.mp3" ~ "tears",
+    song == "Daniel-Powter-Bad-Day-Official-M-[AudioTrimmer.com].mp3" ~ "bad_day",
+    song == "Daniel-Powter-Bad-Day-Instrument.mp3" ~ "bad_day",
+    song == "Rick-Astley-Never-Gonna-Give-You (1).mp3" ~ "rick",
+    song == "Rick-Astley-Never-Gonna-Give-You.mp3" ~ "rick",
+    TRUE ~ song  # If none of the conditions match, keep the original value
+  ))
+
+#reorder 
+
+data <- data[c('run_id', 'song', 'valence', 'familiarity', 'type')]
+
+# now we have finished the pre-processing of the data, we can save this final dataframe so we can continue the analyses and now have to always redo every preprocessing step
+
+write.csv(data, 'survey_data_group6.csv')
+```
+
+
+
+

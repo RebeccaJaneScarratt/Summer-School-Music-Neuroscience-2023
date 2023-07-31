@@ -1,0 +1,117 @@
+---
+title: "Example Analysis Correlation Study"
+author: "Rebecca Scarratt"
+date: "2023-07-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this script, we will be analysing the data that was geenrating using your group's online study.
+As you did a correlational study, our aim is to find the correlation coefficient and plot the data and the correlation line
+
+```{r load packages}
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+library(tidyverse)
+
+# Set seed for reproducability
+set.seed(1)
+
+# set working directory
+setwd("C:/Users/au672599/OneDrive - Aarhus Universitet/Documents/PhD Rebecca/Summer School")
+
+```
+
+```{r load data}
+# find where you saved the downloaded file
+# add that location to this script
+
+data <- read.csv('FILELOCATION/FILENAME.csv')
+data <- read.csv('example-correlation-study.csv')
+
+# cognition.run gives you more information that you need. So the first step to any data analysis is to select the variables and rows of interest
+
+# now we can filter on columns, to only get the informative columns that tells us what the task was and what they answered.
+
+data <- data[c('run_id', 'response','task')]
+
+# we will be filtering the rows based on the column 'task' as that is the column that tells us the question that was asked for each row. 
+
+data <- subset(data, task %in% c('gender', 'like_pop', 'practice'))
+
+# Here 'response' has a strange format, so we run this code to only get the response
+subset_1 = subset(data, task %in% c('gender', 'practice'))
+subset_2 = subset(data, task %in% c('like_pop'))
+colnames(subset_2)[2] <- 'answer'
+
+subset_1[c('Irrelevant', 'Irrelevant1', 'Irrelevant2', 'answer', 'Irrelevant4')] <- str_split_fixed(subset_1$response, '"', 5)
+subset_1 <- subset_1[c("run_id", "answer", 'task')]
+
+data <- rbind(subset_1, subset_2)
+
+# now we need to flip how the data is represented to have each type of task in a different column
+data%>%
+  pivot_wider(names_from = task, values_from = answer) -> data
+
+```
+
+Now that our data is organised well, we can look at it and answer basic descriptive questions.
+In general studies, this would be looking at age, gender and maybe nationality of respondents.
+
+```{r descriptives}
+# let's count how many people answered and check that they all answered the same number of questions
+data %>% count(run_id)
+
+data$gender <- as.factor(data$gender)
+summary(data$gender)
+# here we can see how many people chose Female-Male or Non-binary
+
+ # we make the variables be numeric
+data$practice <- as.numeric(data$practice)
+data$like_pop <- as.numeric(data$like_pop)
+
+# we can also plot each variable to see its distribution
+plot(density(data$practice))
+
+plot(density(data$like_pop))
+```
+
+
+```{r plot data}
+
+plot(data$like_pop, data$practice, main="Plot of the number of hours listened to per week as a function of pop music liking",
+   xlab="Pop liking ", ylab="Numbers of hours of music listened to", pch=19)
+
+# plot with Pearson correlation coefficient
+ggplot(data, aes( x=like_pop, y=practice ))+
+geom_point()+
+stat_cor(method = "pearson", label.x = -5, label.y = 30)+
+geom_smooth(method="lm", se=FALSE)
+
+# plot with Spearman correlation coefficient
+ggplot(data, aes( x=like_pop, y=practice ))+
+geom_point()+
+stat_cor(method = "spearman", label.x = -5, label.y = 30)
+
+```
+
+```{r plot data taking gender into account}
+
+# plot with Pearson correlation coefficient
+ggplot(data, aes( x=like_pop, y=practice ))+
+geom_point()+
+stat_cor(method = "pearson", label.x = -5, label.y = 30)+
+geom_smooth(method="lm", se=FALSE)+
+facet_wrap(~gender)
+
+# plot with Spearman correlation coefficient
+ggplot(data, aes( x=like_pop, y=practice ))+
+geom_point()+
+stat_cor(method = "spearman", label.x = -5, label.y = 30)+
+facet_wrap(~gender)
+```
+

@@ -1,0 +1,141 @@
+---
+title: "Example Analysis Experimental Study"
+author: "Rebecca Scarratt"
+date: "2023-07-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this script, we will be analysing the data that was geenrating using your group's online study.
+As you did an experimental study, our aim is to find the mean difference between each group, see if this difference is statistically significant and plot the data
+
+```{r load packages}
+library(dplyr)
+library(ggpubr)
+
+library(ggplot2)
+
+library(tidyverse)
+
+# Set seed for reproducability
+set.seed(1)
+
+# set working directory
+setwd("C:/Users/au672599/OneDrive - Aarhus Universitet/Documents/PhD Rebecca/Summer School")
+
+```
+
+```{r load data}
+# find where you saved the downloaded file
+# add that location to this script
+
+data <- read.csv('FILELOCATION/FILENAME.csv')
+data <- read.csv('example-experimental-study.csv')
+
+# cognition.run gives you more information that you need. So the first step to any data analysis is to select the variables and rows of interest
+
+# now we can filter on columns, to only get the informative columns that tells us what the task was and what they answered.
+
+data <- data[c('run_id', 'stimulus', 'response','task')]
+
+# we will be filtering the rows based on the column 'task' as that is the column that tells us the question that was asked for each row. 
+
+data <- subset(data, task %in% c('gender', 'trial'))
+
+data[data=="40percentslower.wav"] <- "_slow"
+data[data=="40percentfaster.wav"] <- "_fast"
+
+# Here 'response' has a strange format, so we run this code to only get the response
+subset_1 = subset(data, task %in% c('gender'))
+subset_1[c('Irrelevant', 'Irrelevant1', 'Irrelevant2', 'answer', 'Irrelevant4')] <- str_split_fixed(subset_1$response, '"', 5)
+subset_1 <- subset_1[c("run_id", "answer", 'task')]
+
+# because the 'task' doesn't give us information about which tempo of music was played, we have to merge it with 'stimulus'
+subset_2 = subset(data, task %in% c('trial'))
+colnames(subset_2)[3] <- 'answer'
+
+subset_2 <- subset_2 %>% unite('task', task,stimulus, remove = TRUE)
+
+data <- merge(subset_1, subset_2, by='run_id')
+
+colnames(data) <- c('run_id', 'gender', 'remove', 'trial', 'answer')
+data<- data[c('run_id', 'gender', 'trial', 'answer')]
+
+```
+
+
+Now that our data is organised well, we can look at it and answer basic descriptive questions.
+In general studies, this would be looking at age, gender and maybe nationality of respondents.
+We can also look at the spread of the answers to check for outliers
+
+```{r descriptives}
+# let's count how many people answered and check that they all answered the same number of questions
+data %>% count(run_id)
+
+data$gender <- as.factor(data$gender)
+summary(data$gender)
+# here we can see how many people chose Female-Male or Non-binary, be careful because here each particpant is counted twice
+
+ # we make the variables be numeric
+data$answer <- as.numeric(data$answer)
+
+# we can also plot each variable to see its distribution
+plot(density(data$answer))
+
+```
+
+
+```{r plot data}
+trial_fast = subset(data, trial == 'trial__fast')
+trial_slow = subset(data, trial == 'trial__slow')
+
+plot(trial_fast$answer, trial_slow$answer, main="Plot trial fast vs trial slow",
+   xlab="trial fast", ylab="Trial slow", pch=19)
+
+ggplot(data, aes(x = trial, y = answer, fill = trial)) +
+  stat_summary(
+    fun = mean,
+    geom = "bar",
+    position = "dodge",
+    col = "black",
+    linewidth =0.5
+  ) +
+  scale_fill_manual(values = c("trial__fast" = "#f5f3e5", "trial__slow" = "#eed2a5"))+
+  xlab("Tempo") +
+  ylab("Mean Tension") +
+  ggtitle("Tension by Tempo") +
+  theme_bw()
+
+# per participant
+ggplot(data, aes(x = trial, y = answer, fill=trial)) +
+  stat_summary(
+    fun = mean,
+    geom = "bar",
+    position = "dodge",
+    col = "black",
+    linewidth =0.5
+  ) +
+  scale_fill_manual(values = c("trial__fast" = "#f5f3e5", "trial__slow" = "#eed2a5"))+
+  xlab("Tempo") +
+  ylab("Mean Tension") +
+  ggtitle("Tension by Tempo") +
+  theme_bw()+
+  facet_wrap(~run_id)
+
+```
+
+
+```{r statistical testing}
+# check assumptions
+# normality
+# homoskedasticity
+
+# what to do if assumptions are met
+
+
+# what to do if assumptions are not met
+```
+

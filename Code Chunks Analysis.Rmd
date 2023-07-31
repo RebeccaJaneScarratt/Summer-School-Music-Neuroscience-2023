@@ -110,3 +110,20 @@ kruskal.test(response ~ trial, data = data)
 # if p-value < significance level for either variable then there is a significant difference between the groups
 ```
 
+```{r correlation}
+library(ggpubr)
+# plot with Pearson correlation coefficient
+
+ggplot(data, aes( x=trial, y=response ))+
+geom_point()+
+stat_cor(method = "pearson", label.x = -5, label.y = 30)+
+geom_smooth(method="lm", se=FALSE)
+
+# plot with Spearman correlation coefficient
+ggplot(data, aes( x=trial, y=response ))+
+geom_point()+
+stat_cor(method = "spearman", label.x = -5, label.y = 30)
+
+
+```
+

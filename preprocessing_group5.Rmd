@@ -41,13 +41,13 @@ Of course, we don't change anything of what the cells contain, so it's important
 How exactly to do this step depends on the experiment.
 
 ```{r removing rows and columns}
-# first, let's remove the rows we don't want. In the trial_type column, it tells us what type of question/display we had. It saves information for all of them, but we are not always interested in all of them. This depends on each experiment but in your case, you are only interested in 'text_slider_response' and 'likert_survey' as that's where participants responses are stored. The rest can go. We will add in the audio information later as it's not randomised
+# first, let's remove the rows we don't want. In the trial_type column, it tells us what type of question/display we had. It saves information for all of them, but we are not always interested in all of them. This depends on each experiment but in your case, you are only interested in 'html-slider-response' and 'survey-likert' as that's where participants responses are stored. The rest can go. We will add in the audio information later as it's not randomised
 
-data <- subset(data, task %in% c('text_slider_response', 'likert_survey'))
+data <- subset(data, trial_type %in% c('html-slider-response', 'survey-likert'))
 
 # we want to keep columns 'run_id and response'. The rest we can remove as it doesn't tell us anything important.
 
-data<- data[c('run_id', 'stimulus', 'response')]
+data<- data[c('run_id', 'task', 'response', 'trial_type')]
 
 # now you can open data again to make sure you kept and deleted the right things. If there is a mistake, you can always load the data again and start again.
 
@@ -59,54 +59,79 @@ Now that we have less rows and columns to deal with, we can make them be more in
 At this point, it is sometimes helpful to draw out what type of table/dataframe you would want your data to look like in the end, and then work step by step to that goal.
 
 ```{r formating}
-# let's deal with the stimulus column first. Renaming.
+# let's deal with the task column first. Renaming.
 
 data <- data %>%
-  mutate(stimulus = case_when(
-    stimulus == "<p>When I am sad, I listen to music.</p>" ~ "sad",
-    stimulus == "<p>When I am happy, I listen to music.</p>" ~ "happy",
-    stimulus == "<p>When I am angry, I listen to music.</p>" ~ "angry",
-    stimulus == "" ~ NA,
-    TRUE ~ stimulus  # If none of the conditions match, keep the original value
+  mutate(task = case_when(
+    task == "text_slider_response_sad" ~ "sad",
+    task == "text_slider_response_happy" ~ "happy",
+    task == "text_slider_response_angry" ~ "angry",
+    task == "likert_survey_sad" ~ "sad",
+    task == "likert_survey_happy" ~ "happy",
+    task == "likert_survey_angry" ~ "angry",
+    task == "" ~ NA,
+    TRUE ~ task  # If none of the conditions match, keep the original value
   ))
 
+# to sort out the likert answers, let's split it off from the rest of the data set.
+
+likert <- subset(data, trial_type == 'survey-likert')
 
 # Now let's deal with the likerts questions
 
+# first separate the different questions
+likert[c('1', '2', '3', '4', '5', '6')] <- str_split_fixed(likert$response, ',', 6)
 
-data[c('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42', '43')] <- str_split_fixed(data$response, '"', 43)
+# then separate the question from the answer per question
 
-data <- data[c('run_id', '4', '6', '8', '10', '12', '14', '16', '18', '20', '22', '24', '26', '28', '30', '32', '34', '36', '38', '40', '42')]
+likert[c('1a', '1b', 'personal entertainment', '1d')] <- str_split_fixed(likert$'1', '"', 4)
 
-# this is combining the many columns into one column
-combine_columns_to_string <- function(row) {
-  values <- row[-c(1)]  # Skip the first column (ID) and extract values
-  values[values == ""] <- NA  # Convert empty values to NA
-  values <- na.omit(values)  # Remove missing values
-  if (length(values) > 0) {
-    values_string <- paste(values, collapse = ", ")  # Combine into a single string
-  } else {
-    values_string <- NA_character_  # Set to NA if there are no non-missing values
-  }
-  return(values_string)
-}
+likert[c('2a', '2b', 'personal revival', '2d')] <- str_split_fixed(likert$'2', '"', 4)
 
-data <- data %>%
-  mutate(selected_response = apply(data, 1, combine_columns_to_string))
+likert[c('3a', '3b', 'strong sensation', '3d')] <- str_split_fixed(likert$'3', '"', 4)
 
-data <- data[c('run_id','selected_response')]
+likert[c('4a', '4b', 'personal diversion', '4d')] <- str_split_fixed(likert$'4', '"', 4)
 
-# so our response column is now readable. Now we need to add the audio track information. Because there was no randomisation, we can do this quite easily.
-# However, first we need to remove any participant that didn't complete the survey.
+likert[c('5a', '5b', 'discharge', '5d')] <- str_split_fixed(likert$'5', '"', 4)
+
+likert[c('6a', '6b', 'mental working', '6d')] <- str_split_fixed(likert$'6', '"', 4)
+
+
+# remove all the columns we don't need
+
+likert <- likert[c('run_id', 'task','personal entertainment', 'personal revival','strong sensation', 'personal diversion', 'discharge', 'mental working')]
+
+# just check that it names things well
+
+
+# now let's remove the bits that we don't want
+likert[] <- lapply(likert, gsub, pattern=':', replacement='')
+likert[] <- lapply(likert, gsub, pattern='}', replacement='')
+
+# great now we can combine this organised dataframe back to our original data
+# first remove the old 'likert' information
+
+data <- subset(data, trial_type != 'survey-likert')
+
+# now merge the two clean dataframes
+
+data <- merge(data, likert, by = c('run_id', 'task'))
+
+# let's remove trial_type
+data$trial_type <- NULL
+
+
+# so our data is now readable. 
+# However, the last step e need to do is remove any participant that didn't complete the survey.
 
 # removing non-complete participants
 
 data %>% count(run_id)
-# as you can see in the output of this, every participant should have 8 rows associated with it (for now it's 4 because there are four conditions).
+# as you can see in the output of this, every participant should have 3 rows associated with it .
 
-# here you can remove all the run_ids of participants who have less than 4 'counts'/rows.
+# here you can remove all the run_ids of participants who have less than 3 'counts'/rows.
 
-data <- subset(data, !(run_id %in% c('17', '18')))
+data <- subset(data, !(run_id %in% c('5')))
 
 # we can do the above comand again to check we now have removed the non-completing participants
 
@@ -114,125 +139,10 @@ data %>% count(run_id)
 
 # Now we can continue
   
-audio_vector <- c('classical_1', 'metal_1', 'metal_2', 'classical_2')
-
-# Repeat the vector to create a new data frame. Here you need to change the number of times the list of audio stimuli is repeated so that it matches the length of data. So if it is 60, we calculate 60/4=15, so we repeat it 15 times.
-audio_info <- data.frame(strings = rep(audio_vector, times = 15))
-
-# we can now add the audio infromation to the response information
-
-data <- cbind(data, audio_info)
-
-# check that everything matches up before proceeding
-```
-
-## Specifics for this data
-In your specific experiment, you want to add a see how many of the items they selected were correct and how many were incorrect. So we need to add two columns to the dataframes (items_correct, items_incorrect) that will include the number of correct and incorrect items.
-
-First we need to have saved for each music piece (as the music coresponded with the images), which are correct items.
-
-```{r correct/incorrect responses}
-
-correct_items_1 <- c('Courgette', 'Potato', 'Bread', 'Fries', 'Cucumber', 'Aubergine', 'Bell pepper','Tomato', 'Strawberry', 'Crisps', 'Lemon', 'Donut', 'Apple', 'Pommegranate', 'Salmon', 'Orange', 'Croissant', 'Raspberry')
-
-correct_items_2 <- c('Moon', 'Volcano', 'Boat', 'Rainbow', 'Lion', 'Elephant', 'Clownfish', 'Flower', 'Butterfly', 'Tree', 'Parrot', 'Ant', 'Fire', 'Bee', 'Dolphin', 'Polar bear', 'Helicopter', 'Thunder')
-
-correct_items_3 <- c('Heart', 'Blood', 'Injury', 'Gloves', 'Hospital', 'Stethoscope', 'Lab coat', 'Coffee', 'Virus', 'Wheelchair', 'Muscle', 'Vaccin', 'Scissors', 'Alcohol', 'Brain', 'Medication', 'Liver', 'Bone')
-
-correct_items_4 <- c('Bed', 'Mixer', 'Plate', 'Cutlery', 'Desk', 'Pan', 'Blanket', 'Lamp', 'Pot', 'Toilet paper', 'Curtains', 'Mirror', 'Sink', 'Glass', 'Bottle', 'Tupperware', 'Pillow', 'Spatula')
-# I don't think Tupperware was in the list they cold select from and Toilet paper also wasn't. So check and edit this if necessary
-
-#Now let's count how many are in each response row
-
-count_correct_incorrect_words <- function(response, correct_items) {
-  words <- strsplit(response, " ")[[1]]  # Split response into words
-  correct_words <- sum(words %in% correct_items)  # Count correct words
-  incorrect_words <- sum(!words %in% correct_items)  # Count incorrect words
-  return(list(correct = correct_words, incorrect = incorrect_words))
-}
-
-# let's do it seperately per image
-
-items_1 <- subset(data, strings == 'classical_1')
-
-count_matching_items <- function(cell, vector) {
-  items <- unlist(strsplit(cell, ",\\s*"))  # Split cell into individual items
-  num_matches <- sum(items %in% vector)  # Count matches with 'my_vector'
-  num_non_matches <- sum(!items %in% vector)  # Count non-matches with 'my_vector'
-  return(list(matches = num_matches, non_matches = num_non_matches))
-}
-
-# Apply the function to the 'column_name' column and create new columns for the counts
-items_1 <- items_1 %>%
-  rowwise() %>%
-  mutate(counts = list(count_matching_items(selected_response, vector = correct_items_1)))
-
-# Unpack the list of counts into separate columns
-items_1 <- items_1 %>%
-  mutate(num_matches = counts$matches, num_non_matches = counts$non_matches) %>%
-  select(-counts)
-
-
-# for image 2
-
-items_2 <- subset(data, strings == 'metal_1')
-
-# Apply the function to the 'column_name' column and create new columns for the counts
-items_2 <- items_2 %>%
-  rowwise() %>%
-  mutate(counts = list(count_matching_items(selected_response, vector = correct_items_2)))
-
-# Unpack the list of counts into separate columns
-items_2 <- items_2 %>%
-  mutate(num_matches = counts$matches, num_non_matches = counts$non_matches) %>%
-  select(-counts)
-
-
-
-# for image 3
-
-items_3 <- subset(data, strings == 'metal_2')
-
-# Apply the function to the 'column_name' column and create new columns for the counts
-items_3 <- items_3 %>%
-  rowwise() %>%
-  mutate(counts = list(count_matching_items(selected_response, vector = correct_items_3)))
-
-# Unpack the list of counts into separate columns
-items_3 <- items_3 %>%
-  mutate(num_matches = counts$matches, num_non_matches = counts$non_matches) %>%
-  select(-counts)
-
-
-
-# for image 4
-
-items_4 <- subset(data, strings == 'classical_2')
-
-# Apply the function to the 'column_name' column and create new columns for the counts
-items_4 <- items_4 %>%
-  rowwise() %>%
-  mutate(counts = list(count_matching_items(selected_response, vector = correct_items_4)))
-
-# Unpack the list of counts into separate columns
-items_4 <- items_4 %>%
-  mutate(num_matches = counts$matches, num_non_matches = counts$non_matches) %>%
-  select(-counts)
-
-
-# now merge them all back to the main dataframe
-
-data <- rbind(items_1, items_2, items_3, items_4)
-
-data$total_answers <- data$num_matches + data$num_non_matches
-
-# let's rename some columns for better understanding
-
-colnames(data) <- c('run_id','response','music', 'correct', 'incorrect', 'total')
 
 # now we have finished the pre-processing of the data, we can save this final dataframe so we can continue the analyses and now have to always redo every preprocessing step
 
-write.csv(data, 'survey_data_group1.csv')
+write.csv(data, 'survey_data_group5.csv')
 ```
 
 

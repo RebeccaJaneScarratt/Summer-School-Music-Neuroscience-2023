@@ -1,0 +1,316 @@
+---
+title: "Comparing two playlists"
+author: "Rebecca Scarratt"
+date: "2023-07-31"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load packages}
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+library(tidyverse)
+
+# Set seed for reproducability
+set.seed(1)
+
+# set working directory - remember you need to change this!
+setwd("C:/Users/REPLACE WITH THE DIRECTORY WHERE YOUR FILES ARE SAVED")
+
+```
+
+```{r load data}
+# make sure you change the name of the files of the playlist you want to compare
+
+playlist_1 <- read.csv('REPLACE WITH FILE NAME.csv')
+playlist_2 <- read.csv('REPLACE WITH FILE NAME.csv')
+
+# if you want an easier way to remember which playlist is which change the green words here
+
+playlist_1$category <- 'REPLACE WITH PLAYLIST NAME'
+playlist_2$category <- 'REPLACE WITH PLAYLIST NAME'
+
+
+mergedData <- rbind(subset(playlist_1, select=c(category, acousticness, danceability,energy, instrumentalness, tempo,liveness, loudness, valence,speechiness, key, reducedGenre)),
+              subset(playlist_2, select=c(category, acousticness, danceability,energy, instrumentalness, tempo,liveness, loudness, valence,speechiness, key, reducedGenre)))
+
+
+
+```
+
+# Descriptive Statistics
+
+```{r descriptive statistics}
+mergedData %>% 
+  group_by(category) %>% 
+  summarise(acous=mean(acousticness),
+            instru = mean(instrumentalness),
+            speech =mean(speechiness),
+            loudness= mean(loudness),
+            energy = mean(energy),
+            danceability = mean(danceability),
+            tempo = mean(tempo)) -> descriptive_means
+
+```
+
+```{r comparing genres}
+# making a plot
+ggplot(mergedData, aes(x = reducedGenre, fill = category)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Comparison of Genre Counts in Two Datasets",
+       x = "Genre",
+       y = "Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for readability
+
+# making a table with counts per genre
+genre_counts <- mergedData %>%
+  group_by(category, reducedGenre) %>%
+  summarise(count = n())
+```
+
+```{r t tests and plots}
+# danceability
+
+t.danceability.p <- t.test(playlist_1$danceability, playlist_2$danceability)
+
+# Extract the p-value from the t-test result
+p_value_danceability <- t.danceability.p$p.value
+
+# calculate effect size
+group_means <- tapply(mergedData$danceability, mergedData$category, mean)
+group_sd <- tapply(mergedData$danceability, mergedData$category, sd)
+pooled_sd <- sqrt(((t.danceability.p$parameter - 2) * group_sd[1]^2 + (t.danceability.p$parameter - 2) * group_sd[2]^2) / t.danceability.p$parameter)
+cohen_d_danceability <- abs(diff(group_means) / pooled_sd)
+
+# Print Cohen's d, which is effect size
+print(cohen_d_danceability)
+
+ggplot(mergedData, aes(x = danceability, fill = category)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Distribution of danceability in Two Datasets",
+       x = "Danceability",
+       y = "Density") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  geom_text(x = Inf, y = Inf, label = paste("p =", format(round(p_value_danceability, digits = 4), scientific = FALSE)),
+            hjust = 1, vjust = 1, size = 3)+
+  geom_text(x = Inf, y = Inf, label = paste("d =", format(round(cohen_d_danceability, digits= 4), scientific = FALSE)),
+            hjust = 1, vjust = 2.5, size = 3)
+
+#instrumentalness
+t.instrumentalness.p <- t.test(playlist_1$instrumentalness, playlist_2$instrumentalness)
+
+# Extract the p-value from the t-test result
+p_value_instrumentalness <- t.instrumentalness.p$p.value
+
+print(p_value_instrumentalness)
+
+# calculate effect size
+group_means <- tapply(mergedData$instrumentalness, mergedData$category, mean)
+group_sd <- tapply(mergedData$instrumentalness, mergedData$category, sd)
+pooled_sd <- sqrt(((t.instrumentalness.p$parameter - 2) * group_sd[1]^2 + (t.instrumentalness.p$parameter - 2) * group_sd[2]^2) / t.instrumentalness.p$parameter)
+cohen_d_instrumentalness <- abs(diff(group_means) / pooled_sd)
+
+# Print Cohen's d, which is effect size
+print(cohen_d_instrumentalness)
+
+ggplot(mergedData, aes(x = instrumentalness, fill = category)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Distribution of instrumentalness in Two Datasets",
+       x = "Instrumentalness",
+       y = "Density") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  geom_text(x = Inf, y = Inf, label = paste("p =", format(round(p_value_instrumentalness, digits = 4), scientific = FALSE)),hjust = 1, vjust = 1, size = 3)+
+  geom_text(x = Inf, y = Inf, label = paste("d =", format(round(cohen_d_instrumentalness, digits= 4), scientific = FALSE)),
+            hjust = 1, vjust = 2.5, size = 3)
+
+
+#acousticness
+t.acousticness.p <- t.test(playlist_1$acousticness, playlist_2$acousticness)
+
+# Extract the p-value from the t-test result
+p_value_acousticness <- t.acousticness.p$p.value
+
+# calculate effect size
+group_means <- tapply(mergedData$acousticness, mergedData$category, mean)
+group_sd <- tapply(mergedData$acousticness, mergedData$category, sd)
+pooled_sd <- sqrt(((t.acousticness.p$parameter - 2) * group_sd[1]^2 + (t.acousticness.p$parameter - 2) * group_sd[2]^2) / t.acousticness.p$parameter)
+cohen_d_acousticness <- abs(diff(group_means) / pooled_sd)
+
+# Print Cohen's d, which is effect size
+print(cohen_d_acousticness)
+
+ggplot(mergedData, aes(x = acousticness, fill = category)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Distribution of acousticness in Two Datasets",
+       x = "Acousticness",
+       y = "Density") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  geom_text(x = Inf, y = Inf, label = paste("p =", format(round(p_value_acousticness, digits = 4), scientific = FALSE)),
+            hjust = 1, vjust = 1, size = 3)+
+  geom_text(x = Inf, y = Inf, label = paste("d =", format(round(cohen_d_acousticness, digits= 4), scientific = FALSE)),
+            hjust = 1, vjust = 2.5, size = 3)
+
+#loudness
+t.loudness.p <- t.test(playlist_1$loudness, playlist_2$loudness)
+
+# Extract the p-value from the t-test result
+p_value_loudness <- t.loudness.p$p.value
+
+# calculate effect size
+group_means <- tapply(mergedData$loudness, mergedData$category, mean)
+group_sd <- tapply(mergedData$loudness, mergedData$category, sd)
+pooled_sd <- sqrt(((t.loudness.p$parameter - 2) * group_sd[1]^2 + (t.loudness.p$parameter - 2) * group_sd[2]^2) / t.loudness.p$parameter)
+cohen_d_loudness <- abs(diff(group_means) / pooled_sd)
+
+# Print Cohen's d, which is effect size
+print(cohen_d_loudness)
+
+ggplot(mergedData, aes(x = loudness, fill = category)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Distribution of loudness in Two Datasets",
+       x = "Loudness",
+       y = "Density") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  geom_text(x = Inf, y = Inf, label = paste("p =", format(round(p_value_loudness, digits = 4), scientific = FALSE)),
+            hjust = 1, vjust = 1, size = 3)+
+  geom_text(x = Inf, y = Inf, label = paste("d =", format(round(cohen_d_loudness, digits= 4), scientific = FALSE)),
+            hjust = 1, vjust = 2.5, size = 3)
+
+#energy
+t.energy.p <- t.test(playlist_1$energy, playlist_2$energy)
+
+# Extract the p-value from the t-test result
+p_value_energy <- t.energy.p$p.value
+
+# calculate effect size
+group_means <- tapply(mergedData$energy, mergedData$category, mean)
+group_sd <- tapply(mergedData$energy, mergedData$category, sd)
+pooled_sd <- sqrt(((t.energy.p$parameter - 2) * group_sd[1]^2 + (t.energy.p$parameter - 2) * group_sd[2]^2) / t.energy.p$parameter)
+cohen_d_energy <- abs(diff(group_means) / pooled_sd)
+
+# Print Cohen's d, which is effect size
+print(cohen_d_energy)
+
+ggplot(mergedData, aes(x = energy, fill = category)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Distribution of energy in Two Datasets",
+       x = "Energy",
+       y = "Density") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  geom_text(x = Inf, y = Inf, label = paste("p =", format(round(p_value_energy, digits = 4), scientific = FALSE)),
+            hjust = 1, vjust = 1, size = 3)+
+  geom_text(x = Inf, y = Inf, label = paste("d =", format(round(cohen_d_energy, digits= 4), scientific = FALSE)),
+            hjust = 1, vjust = 2.5, size = 3)
+
+
+#valence
+t.valence.p <- t.test(playlist_1$valence, playlist_2$valence)
+
+# Extract the p-value from the t-test result
+p_value_valence <- t.valence.p$p.value
+
+# calculate effect size
+group_means <- tapply(mergedData$valence, mergedData$category, mean)
+group_sd <- tapply(mergedData$valence, mergedData$category, sd)
+pooled_sd <- sqrt(((t.valence.p$parameter - 2) * group_sd[1]^2 + (t.valence.p$parameter - 2) * group_sd[2]^2) / t.valence.p$parameter)
+cohen_d_valence <- abs(diff(group_means) / pooled_sd)
+
+# Print Cohen's d, which is effect size
+print(cohen_d_valence)
+
+ggplot(mergedData, aes(x = valence, fill = category)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Distribution of valence in Two Datasets",
+       x = "Valence",
+       y = "Density") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  geom_text(x = Inf, y = Inf, label = paste("p =", format(round(p_value_valence, digits = 4), scientific = FALSE)),
+            hjust = 1, vjust = 1, size = 3)+
+  geom_text(x = Inf, y = Inf, label = paste("d =", format(round(cohen_d_valence, digits= 4), scientific = FALSE)),
+            hjust = 1, vjust = 2.5, size = 3)
+
+#speechiness
+t.speechiness.p <- t.test(playlist_1$speechiness, playlist_2$speechiness)
+
+# Extract the p-value from the t-test result
+p_value_speechiness <- t.speechiness.p$p.value
+
+# calculate effect size
+group_means <- tapply(mergedData$speechiness, mergedData$category, mean)
+group_sd <- tapply(mergedData$speechiness, mergedData$category, sd)
+pooled_sd <- sqrt(((t.speechiness.p$parameter - 2) * group_sd[1]^2 + (t.speechiness.p$parameter - 2) * group_sd[2]^2) / t.speechiness.p$parameter)
+cohen_d_speechiness <- abs(diff(group_means) / pooled_sd)
+
+# Print Cohen's d, which is effect size
+print(cohen_d_speechiness)
+
+ggplot(mergedData, aes(x = speechiness, fill = category)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Distribution of speechiness in Two Datasets",
+       x = "Speechiness",
+       y = "Density") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  geom_text(x = Inf, y = Inf, label = paste("p =", format(round(p_value_speechiness, digits = 4), scientific = FALSE)),
+            hjust = 1, vjust = 1, size = 3)+
+  geom_text(x = Inf, y = Inf, label = paste("d =", format(round(cohen_d_speechiness, digits= 4), scientific = FALSE)),
+            hjust = 1, vjust = 2.5, size = 3)
+#liveness
+t.liveness.p <- t.test(playlist_1$liveness, playlist_2$liveness)
+
+# Extract the p-value from the t-test result
+p_value_liveness <- t.liveness.p$p.value
+
+# calculate effect size
+group_means <- tapply(mergedData$liveness, mergedData$category, mean)
+group_sd <- tapply(mergedData$liveness, mergedData$category, sd)
+pooled_sd <- sqrt(((t.liveness.p$parameter - 2) * group_sd[1]^2 + (t.liveness.p$parameter - 2) * group_sd[2]^2) / t.liveness.p$parameter)
+cohen_d_liveness <- abs(diff(group_means) / pooled_sd)
+
+# Print Cohen's d, which is effect size
+print(cohen_d_liveness)
+
+ggplot(mergedData, aes(x = liveness, fill = category)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Distribution of liveness in Two Datasets",
+       x = "Liveness",
+       y = "Density") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  geom_text(x = Inf, y = Inf, label = paste("p =", format(round(p_value_liveness, digits = 4), scientific = FALSE)),
+            hjust = 1, vjust = 1, size = 3)+
+  geom_text(x = Inf, y = Inf, label = paste("d =", format(round(cohen_d_liveness, digits= 4), scientific = FALSE)),
+            hjust = 1, vjust = 2.5, size = 3)
+
+#tempo
+t.tempo.p <- t.test(playlist_1$tempo, playlist_2$tempo)
+
+# Extract the p-value from the t-test result
+p_value_tempo <- t.tempo.p$p.value
+
+# calculate effect size
+group_means <- tapply(mergedData$tempo, mergedData$category, mean)
+group_sd <- tapply(mergedData$tempo, mergedData$category, sd)
+pooled_sd <- sqrt(((t.tempo.p$parameter - 2) * group_sd[1]^2 + (t.tempo.p$parameter - 2) * group_sd[2]^2) / t.tempo.p$parameter)
+cohen_d_tempo <- abs(diff(group_means) / pooled_sd)
+
+# Print Cohen's d, which is effect size
+print(cohen_d_tempo)
+
+ggplot(mergedData, aes(x = tempo, fill = category)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Distribution of tempo in Two Datasets",
+       x = "Tempo",
+       y = "Density") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  geom_text(x = Inf, y = Inf, label = paste("p =", format(round(p_value_tempo, digits = 4), scientific = FALSE)),
+            hjust = 1, vjust = 1, size = 3)+
+  geom_text(x = Inf, y = Inf, label = paste("d =", format(round(cohen_d_tempo, digits= 4), scientific = FALSE)),
+            hjust = 1, vjust = 2.5, size = 3)
+```
+
+
+
+
